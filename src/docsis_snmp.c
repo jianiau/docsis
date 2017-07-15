@@ -234,7 +234,7 @@ encode_vbind (char *oid_string, char oid_asntype, union t_val *value,
       break;
       ;;
     case 'a':
-      if (!inet_aton (value->strval, (struct in_addr *) &ltmp))
+      if (!netsnmp_inet_pton (value->strval, (struct in_addr *) &ltmp))
 	{
 	  fprintf(stderr, "Invalid IP address %s at line %d\n", value->strval, line);
 	  return 0;

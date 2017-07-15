@@ -21,7 +21,7 @@
  *  DOCSIS is a registered trademark of Cablelabs, http://www.cablelabs.com
  */
 
-#include <netdb.h>
+
 
 #include <errno.h>
 #include <string.h>
@@ -29,8 +29,15 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
+
+#ifdef WIN32
+	#include <ws2tcpip.h>
+#else
+	#include <netdb.h>
+	#include <sys/socket.h>
+	#include <netinet/in.h>
+	#include <arpa/inet.h>
+#endif
 
 #include <fcntl.h>
 #include <math.h>
@@ -167,7 +174,7 @@ int encode_ip( unsigned char *buf, void *tval, struct symbol_entry *sym_ptr )
 
   helper = (union t_val *) tval;
 
-  if ( !inet_aton ( helper->strval, &in) ) {
+  if ( !netsnmp_inet_pton ( helper->strval, &in) ) {
 	fprintf(stderr,  "Invalid IP address %s at line %d", helper->strval, line );
 	exit (-1);
   }
@@ -195,7 +202,7 @@ int encode_ip_list( unsigned char *buf, void *tval, struct symbol_entry *sym_ptr
   {
     array[i] = token;
     token = strtok (NULL, s);
-    if ( inet_aton ( array[i], &in) ) {
+    if ( netsnmp_inet_pton ( array[i], &in) ) {
       memcpy ( buf + 4 * i, &in, sizeof(struct in_addr));
     } else {
       fprintf(stderr, "Invalid IP address %s at line %d\n", helper->strval, line );
@@ -227,12 +234,12 @@ int encode_ip6( unsigned char *buf, void *tval, struct symbol_entry *sym_ptr )
 
   helper = (union t_val *) tval;
 
-  if ( !inet_pton(AF_INET6, helper->strval, &in) ) {
+  if ( !netsnmp_inet_pton(AF_INET6, helper->strval, &in) ) {
 	fprintf(stderr,  "Invalid IP address %s at line %d\n", helper->strval, line );
 	exit (-1);
   }
 #ifdef DEBUG
-  fprintf(stderr, "encode_ip: found %s at line %d\n", inet_ntop(AF_INET6, &in, ip, sizeof(ip)), line);
+  fprintf(stderr, "encode_ip: found %s at line %d\n", netsnmp_inet_ntop(AF_INET6, &in, ip, sizeof(ip)), line);
 #endif /* DEBUG */
   memcpy ( buf, &in, sizeof(struct in6_addr));
   free(helper->strval);
@@ -255,7 +262,7 @@ int encode_ip6_list( unsigned char *buf, void *tval, struct symbol_entry *sym_pt
   {
     array[i] = token;
     token = strtok (NULL, s);
-    if ( inet_pton ( AF_INET6, array[i], &in6) ) {
+    if ( netsnmp_inet_pton ( AF_INET6, array[i], &in6) ) {
       memcpy ( buf + 16 * i, &in6, sizeof(struct in6_addr));
     } else {
       fprintf(stderr, "Invalid IP address %s at line %d\n", helper->strval, line );
@@ -286,7 +293,7 @@ int encode_ip6_prefix_list( unsigned char *buf, void *tval, struct symbol_entry 
       subtoken = strtok_r(str2, "/", &saveptr2);
       if (subtoken == NULL)
         break;
-      if ( inet_pton ( AF_INET6, subtoken, &in6) ) {
+      if ( netsnmp_inet_pton ( AF_INET6, subtoken, &in6) ) {
         memcpy ( buf + 17 * j, &in6, sizeof(struct in6_addr));
       } else {
         final = (char)atoi(subtoken);
@@ -307,11 +314,11 @@ int encode_ip_ip6( unsigned char *buf, void *tval, struct symbol_entry *sym_ptr 
 
   helper = (union t_val *) tval;
 
-  if ( inet_pton(AF_INET6, helper->strval, &in6) ) {
+  if ( netsnmp_inet_pton(AF_INET6, helper->strval, &in6) ) {
     memcpy ( buf, &in6, sizeof(struct in6_addr));
     free(helper->strval);
     return ( sizeof(struct in6_addr));
-  } else if ( inet_aton ( helper->strval, &in) ) {
+  } else if ( netsnmp_inet_pton ( helper->strval, &in) ) {
     memcpy ( buf, &in, sizeof(struct in_addr));
     free(helper->strval);
     return ( sizeof(struct in_addr));
@@ -332,12 +339,12 @@ int encode_char_ip_ip6( unsigned char *buf, void *tval, struct symbol_entry *sym
 
   helper = (union t_val *) tval;
 
-  if ( inet_pton(AF_INET6, helper->strval, &in6) ) {
+  if ( netsnmp_inet_pton(AF_INET6, helper->strval, &in6) ) {
     memcpy ( buf, &ipv6, sizeof(char) );
     memcpy ( buf + 1, &in6, sizeof(struct in6_addr));
     free(helper->strval);
     return ( sizeof(char) + sizeof(struct in6_addr));
-  } else if ( inet_aton ( helper->strval, &in) ) {
+  } else if ( netsnmp_inet_pton ( helper->strval, &in) ) {
     memcpy ( buf, &ipv4, sizeof(char) );
     memcpy ( buf + 1, &in, sizeof(struct in_addr));
     free(helper->strval);
@@ -371,12 +378,12 @@ int encode_ip_ip6_port( unsigned char *buf, void *tval, struct symbol_entry *sym
   }
   port = htons(atoi(array[1]));
 
-  if ( inet_pton(AF_INET6, array[0], &in6) ) {
+  if ( netsnmp_inet_pton(AF_INET6, array[0], &in6) ) {
     memcpy ( buf, &in6, sizeof(struct in6_addr));
     memcpy ( buf + sizeof(struct in6_addr),&port,sizeof(unsigned short));
     free(helper->strval);
     return ( sizeof(struct in6_addr) + sizeof(unsigned short));
-  } else if ( inet_aton ( array[0], &in) ) {
+  } else if ( netsnmp_inet_pton ( array[0], &in) ) {
     memcpy ( buf, &in, sizeof(struct in_addr));
     memcpy ( buf + sizeof(struct in_addr),&port,sizeof(unsigned short));
     free(helper->strval);
@@ -394,7 +401,7 @@ int encode_lenzero( unsigned char *buf, void *tval, struct symbol_entry *sym_ptr
 
 int encode_ether ( unsigned char *buf, void *tval, struct symbol_entry *sym_ptr )
 {
-int retval; 	     /* return value of inet_aton */
+int retval; 	     /* return value of netsnmp_inet_pton */
 union t_val *helper; /* We only use this to cast the void* we receive to what we think it should be */
 
   if ( buf == NULL ) {

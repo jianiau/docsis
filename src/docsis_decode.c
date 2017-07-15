@@ -24,9 +24,15 @@
 #include <sys/types.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
+
+#ifdef WIN32
+	#include <ws2tcpip.h>
+#else
+	#include <sys/socket.h>
+	#include <netinet/in.h>
+	#include <netdb.h>
+#endif
+
 
 #include <math.h>
 #include <ctype.h>
@@ -128,7 +134,7 @@ void decode_ip6 (unsigned char *tlvbuf, symbol_type *sym, size_t length )
 
   memcpy (&helper, tlvbuf, length );
   fprintf (stdout, "%s %s;\n",
-	sym->sym_ident, inet_ntop(AF_INET6,tlvbuf,ipstr,sizeof ipstr) );
+	sym->sym_ident, netsnmp_inet_ntop(AF_INET6,tlvbuf,ipstr,sizeof ipstr) );
 }
 
 void decode_ip6_list (unsigned char *tlvbuf, symbol_type *sym, size_t length )
@@ -139,7 +145,7 @@ void decode_ip6_list (unsigned char *tlvbuf, symbol_type *sym, size_t length )
   printf("%s ", sym->sym_ident);
   for ( i=0; i < length / 16; i++) {
     memcpy (&helper, tlvbuf + i * 16, 16 );
-    printf( "%s", inet_ntop(AF_INET6, tlvbuf + i * 16, ipstr, sizeof ipstr) );
+    printf( "%s", netsnmp_inet_ntop(AF_INET6, tlvbuf + i * 16, ipstr, sizeof ipstr) );
     if (i < (length/16) - 1 ) {
       printf(",");
     }
@@ -153,7 +159,7 @@ void decode_ip6_prefix_list (unsigned char *tlvbuf, symbol_type *sym, size_t len
   unsigned int i;
   printf("%s ", sym->sym_ident);
   for ( i=0; i < length / 17; i++) {
-    printf( "%s", inet_ntop(AF_INET6, tlvbuf + i * 17, ipstr, sizeof ipstr) );
+    printf( "%s", netsnmp_inet_ntop(AF_INET6, tlvbuf + i * 17, ipstr, sizeof ipstr) );
     printf( "/%d", tlvbuf[i * 17 + 16] );
     if (i < (length/17) - 1 ) {
       printf(",");
@@ -173,7 +179,7 @@ void decode_ip_ip6 (unsigned char *tlvbuf, symbol_type *sym, size_t length )
   }
   if (length == 16 ) {
       memcpy (&ip6_addr, tlvbuf, INET6_ADDRSTRLEN);
-      printf("%s %s;\n", sym->sym_ident, inet_ntop(AF_INET6,ip6_addr,ipstr,sizeof ipstr) );
+      printf("%s %s;\n", sym->sym_ident, netsnmp_inet_ntop(AF_INET6,ip6_addr,ipstr,sizeof ipstr) );
   }
 }
 
@@ -188,7 +194,7 @@ void decode_char_ip_ip6 (unsigned char *tlvbuf, symbol_type *sym, size_t length 
   }
   if (length == 17 ) {
       memcpy (&ip6_addr, tlvbuf + 1, INET6_ADDRSTRLEN);
-      printf("%s %s;\n", sym->sym_ident, inet_ntop(AF_INET6,ip6_addr,ipstr,sizeof ipstr) );
+      printf("%s %s;\n", sym->sym_ident, netsnmp_inet_ntop(AF_INET6,ip6_addr,ipstr,sizeof ipstr) );
   }
 }
 
@@ -203,7 +209,7 @@ void decode_ip_ip6_port (unsigned char *tlvbuf, symbol_type *sym, size_t length 
   }
   if (length == 18 ) {
       memcpy (&ip6_addr, tlvbuf, INET6_ADDRSTRLEN);
-      printf("%s %s/%d;\n", sym->sym_ident, inet_ntop(AF_INET6,ip6_addr,ipstr,sizeof ipstr), tlvbuf[16] * 256 + tlvbuf[17] );
+      printf("%s %s/%d;\n", sym->sym_ident, netsnmp_inet_ntop(AF_INET6,ip6_addr,ipstr,sizeof ipstr), tlvbuf[16] * 256 + tlvbuf[17] );
   }
 }
 

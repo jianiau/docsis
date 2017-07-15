@@ -29,14 +29,14 @@
 #include <string.h>
 #include <math.h>
 #include <sys/types.h>
-/*
+
 #ifdef WIN32
-#include <winsock.h>
-#else */
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-/* #endif */
+	#include <ws2tcpip.h>
+#else
+	#include <sys/socket.h>
+	#include <netinet/in.h>
+	#include <arpa/inet.h>
+#endif
 
 #include "docsis_common.h"
 
