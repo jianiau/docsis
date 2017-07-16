@@ -607,7 +607,11 @@ decode_file (char *file)
   unsigned int buflen = 0;
   int rv = 0;
   struct stat st;
+#ifdef WIN32
+  if ((ifd = open (file, O_RDONLY|O_BINARY)) == -1)
+#else
   if ((ifd = open (file, O_RDONLY)) == -1)
+#endif
     {
       fprintf(stderr, "Error opening binary file %s: %s\n", file, strerror (errno));
       exit (-1);
