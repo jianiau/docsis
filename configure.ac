@@ -153,7 +153,6 @@ if test "x$GCC" = "xyes"; then
 			"-Wcast-align" \
 			"-Wdeclaration-after-statement" \
 			"-Wendif-labels" \
-			"-Werror-implicit-function-declaration" \
 			"-Wextra -Wno-unused-parameter" \
 			"-Wfloat-equal" \
 			"-Wformat-security" \
@@ -203,7 +202,7 @@ if test "x$GCC" = "xyes"; then
 	fi
 	
 	case $host in
-        *cygwin*)
+        *cygwin*|*mingw*)
                 CFLAGS="$CFLAGS -fno-stack-protector"
                 ;;
         esac
